@@ -44,72 +44,59 @@ struct DesignerView: View {
     }
 
     private var canvasToolbar: some View {
-        HStack(spacing: 8) {
-            Button {
-                designerStore.addText()
-            } label: {
-                Label("Text", systemImage: "textformat")
-            }
-
-            Button {
-                addImage()
-            } label: {
-                Label("Image", systemImage: "photo")
-            }
-
-            Divider()
-                .frame(height: 22)
-
-            Button {
-                designerStore.duplicateSelected()
-            } label: {
-                Label("Duplicate", systemImage: "plus.square.on.square")
-            }
-            .disabled(designerStore.selectedElement == nil)
-
-            Button {
-                designerStore.deleteSelected()
-            } label: {
-                Label("Delete", systemImage: "trash")
-            }
-            .disabled(designerStore.selectedElement == nil)
-
-            selectedElementControls
-
-            Spacer(minLength: 8)
-
-            Text("\(Int(designerStore.widthDots))×\(Int(designerStore.heightDots)) dots")
-                .font(.caption.monospacedDigit())
-                .foregroundColor(.secondary)
-
-            Button {
-                printLabel()
-            } label: {
-                Label(isPreparingPrint ? "Preparing" : "Print", systemImage: "printer")
-            }
-            .disabled(!printerStore.isConnected || isPreparingPrint)
-
-            Button {
-                withAnimation(.easeInOut(duration: 0.18)) {
-                    showBitmapPanel.toggle()
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                toolbarButton("textformat", help: "Add text") {
+                    designerStore.addText()
                 }
-            } label: {
-                Label("Bitmap", systemImage: "rectangle.3.group")
-            }
 
-            Button {
-                withAnimation(.easeInOut(duration: 0.18)) {
-                    showElementsPanel.toggle()
+                toolbarButton("photo", help: "Add image") {
+                    addImage()
                 }
-            } label: {
-                Label("Elements", systemImage: "list.bullet.rectangle")
-            }
 
-            Toggle("Grid", isOn: $designerStore.showGrid)
-                .toggleStyle(.checkbox)
+                Divider()
+                    .frame(height: 22)
+
+                toolbarButton("plus.square.on.square", help: "Duplicate") {
+                    designerStore.duplicateSelected()
+                }
+                .disabled(designerStore.selectedElement == nil)
+
+                toolbarButton("trash", help: "Delete") {
+                    designerStore.deleteSelected()
+                }
+                .disabled(designerStore.selectedElement == nil)
+
+                selectedElementControls
+
+                Divider()
+                    .frame(height: 22)
+
+                toolbarButton("printer", help: "Print") {
+                    printLabel()
+                }
+                .disabled(!printerStore.isConnected || isPreparingPrint)
+
+                toolbarButton(showBitmapPanel ? "rectangle.3.group.fill" : "rectangle.3.group", help: "Bitmap preview") {
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        showBitmapPanel.toggle()
+                    }
+                }
+
+                toolbarButton(showElementsPanel ? "sidebar.right" : "sidebar.right", help: "Elements") {
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        showElementsPanel.toggle()
+                    }
+                }
+
+                toolbarButton(designerStore.showGrid ? "grid.circle.fill" : "grid.circle", help: "Grid") {
+                    designerStore.showGrid.toggle()
+                }
+            }
+            .controlSize(.small)
+            .buttonStyle(.bordered)
+            .fixedSize(horizontal: true, vertical: false)
         }
-        .controlSize(.small)
-        .buttonStyle(.bordered)
         .padding(10)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -117,6 +104,14 @@ struct DesignerView: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(Color.black.opacity(0.08), lineWidth: 1)
         )
+    }
+
+    private func toolbarButton(_ systemImage: String, help: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .frame(width: 18, height: 16)
+        }
+        .help(help)
     }
 
     @ViewBuilder
