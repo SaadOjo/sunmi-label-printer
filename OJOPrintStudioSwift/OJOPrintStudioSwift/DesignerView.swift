@@ -15,6 +15,7 @@ struct DesignerView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     mediaCard
+                    outputSettingsCard
                     elementsCard
                     inspectorCard
                     printCard
@@ -72,16 +73,38 @@ struct DesignerView: View {
                 }
                 HStack(spacing: 10) {
                     numberField("Gap", value: Binding(get: { designerStore.gapMM }, set: { designerStore.gapMM = $0 }), suffix: "mm")
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("Density")
-                            .font(.caption.weight(.semibold))
-                            .foregroundColor(.secondary)
-                        Stepper(value: $designerStore.density, in: 0...15) {
-                            Text("\(designerStore.density)")
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
+                    Spacer()
+                }
+            }
+        }
+    }
+
+    private var outputSettingsCard: some View {
+        card(title: "Output settings", subtitle: "Printer/raster options. Bitmap inversion is enabled by default for this SUNMI label workflow.") {
+            VStack(alignment: .leading, spacing: 11) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Density")
+                        .font(.caption.weight(.semibold))
+                        .foregroundColor(.secondary)
+                    Stepper(value: $designerStore.density, in: 0...15) {
+                        Text("\(designerStore.density)")
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
+
+                Toggle("Invert bitmap bits", isOn: $designerStore.invertBitmapBits)
+                    .toggleStyle(.checkbox)
+                    .help("Default is on. Use this when the printer expects 0 bits for burned/black pixels.")
+
+                Text("Preview shows the 1-bit pixels intended to burn. Inversion only changes the byte polarity sent to the printer.")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+
+                Text(designerStore.summary)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(.secondary)
+                    .lineLimit(8)
+                    .textSelection(.enabled)
             }
         }
     }
@@ -229,22 +252,9 @@ struct DesignerView: View {
     }
 
     private var printCard: some View {
-        card(title: "Print", subtitle: "The design is rasterized in Swift and sent as TSPL BITMAP through the SUNMI SDK connection.") {
+        card(title: "Print", subtitle: "Preview and send the current design to the connected printer.") {
             VStack(alignment: .leading, spacing: 10) {
-                Text(designerStore.summary)
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundColor(.secondary)
-                    .lineLimit(8)
-                    .textSelection(.enabled)
-
                 bitmapPreview
-
-                Toggle("Invert bitmap bits", isOn: $designerStore.invertBitmapBits)
-                    .toggleStyle(.checkbox)
-                    .help("Use this when the printer renders the label as white content on a black background.")
-                Text("Preview shows the 1-bit pixels intended to burn. The invert option only changes byte polarity sent to the printer.")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
 
                 Button {
                     printLabel()

@@ -160,7 +160,9 @@ final class LabelDesignerStore: ObservableObject {
 
     private var isNormalizingMedia = false
     private var isApplyingPreset = false
-    private static let persistenceKey = "OJOPrintStudioSwift.LabelDesignerState.v1"
+    private static let persistenceKey = "OJOPrintStudioSwift.LabelDesignerState.v2"
+    private static let legacyPersistenceKey = "OJOPrintStudioSwift.LabelDesignerState.v1"
+    private static let defaultInvertBitmapBits = true
 
     private var isRestoringState = false
     private var previewRenderTask: Task<Void, Never>?
@@ -432,8 +434,11 @@ final class LabelDesignerStore: ObservableObject {
     }
 
     private func restorePersistedState() -> Bool {
-        guard let data = UserDefaults.standard.data(forKey: Self.persistenceKey),
-              let state = try? JSONDecoder().decode(PersistedDesignerState.self, from: data) else {
+        let defaults = UserDefaults.standard
+        let storedData = defaults.data(forKey: Self.persistenceKey).map { (data: $0, isLegacy: false) }
+            ?? defaults.data(forKey: Self.legacyPersistenceKey).map { (data: $0, isLegacy: true) }
+        guard let storedData,
+              let state = try? JSONDecoder().decode(PersistedDesignerState.self, from: storedData.data) else {
             return false
         }
 
@@ -442,7 +447,7 @@ final class LabelDesignerStore: ObservableObject {
         heightMM = clamped(state.heightMM, min: 8, max: 200)
         gapMM = clamped(state.gapMM, min: 0, max: 20)
         density = Int(clamped(Double(state.density), min: 0, max: 15))
-        invertBitmapBits = state.invertBitmapBits
+        invertBitmapBits = storedData.isLegacy ? Self.defaultInvertBitmapBits : state.invertBitmapBits
         showGrid = state.showGrid
         elements = state.elements.map { $0.designerElement() }.map { element in
             var next = element

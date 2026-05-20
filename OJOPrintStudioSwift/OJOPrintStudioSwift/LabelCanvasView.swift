@@ -505,10 +505,25 @@ private struct CanvasMouseOverlay: NSViewRepresentable {
         }
 
         override func hitTest(_ point: NSPoint) -> NSView? {
-            if let passthroughRect, passthroughRect.contains(point) {
+            if isInPassthroughRect(point) {
+                // Let the inline NSTextView underneath receive the click. Without this,
+                // a click while editing text is interpreted as a canvas click, which exits
+                // text mode instead of moving the insertion cursor.
                 return nil
             }
             return super.hitTest(point)
+        }
+
+        private func isInPassthroughRect(_ point: NSPoint) -> Bool {
+            guard let passthroughRect else { return false }
+            if passthroughRect.contains(point) {
+                return true
+            }
+
+            // SwiftUI and AppKit can disagree about flipped coordinates inside hosted views.
+            // Check the vertically mirrored point too so the text-edit hole is stable.
+            let mirroredPoint = CGPoint(x: point.x, y: bounds.height - point.y)
+            return passthroughRect.contains(mirroredPoint)
         }
 
         override func mouseDown(with event: NSEvent) {
