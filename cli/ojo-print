@@ -1,0 +1,734 @@
+#!/usr/bin/env python3
+"""
+ojo-print: terminal/agent-friendly SUNMI/raw printer CLI.
+
+Transport: raw TCP/AppSocket/JetDirect (port 9100 by default)
+Protocols: ESC/POS for receipts, TSPL for labels, raw passthrough for full control.
+"""
+
+from __future__ import annotations
+
+import argparse
+import base64
+import binascii
+import ipaddress
+import json
+import os
+import socket
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Tuple
+
+ESC = b"\x1b"
+GS = b"\x1d"
+DLE = b"\x10"
+EOT = b"\x04"
+LF = b"\x0a"
+
+DEFAULT_PORT = 9100
+DEFAULT_TIMEOUT = 3.0
+
+
+@dataclass
+class Result:
+    ok: bool
+    message: str = ""
+    bytes_sent: int = 0
+    protocol: str = "raw"
+    transport: str = "tcp"
+    host: str = ""
+    port: int = DEFAULT_PORT
+    extra: Optional[Dict[str, Any]] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        data = {
+            "ok": self.ok,
+            "message": self.message,
+            "bytesSent": self.bytes_sent,
+            "protocol": self.protocol,
+            "transport": self.transport,
+            "host": self.host,
+            "port": self.port,
+        }
+        if self.extra:
+            data.update(self.extra)
+        return data
+
+
+def print_json(data: Any) -> None:
+    print(json.dumps(data, indent=2, sort_keys=True))
+
+
+def fail(message: str, code: int = 1, **extra: Any) -> None:
+    payload = {"ok": False, "message": message}
+    payload.update(extra)
+    print_json(payload)
+    raise SystemExit(code)
+
+
+def read_json_arg(value: str) -> Dict[str, Any]:
+    if value == "-":
+        return json.load(sys.stdin)
+    with open(value, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def clean_text(value: Any, fallback: str = "") -> str:
+    if value is None:
+        return fallback
+    return str(value).replace("\r", " ").replace("\n", " ")
+
+
+def money(value: float, currency: str = "$") -> str:
+    return f"{currency}{value:.2f}"
+
+
+def send_tcp(host: str, port: int, data: bytes, timeout: float = DEFAULT_TIMEOUT, read_bytes: int = 0) -> Tuple[int, bytes]:
+    if not data and read_bytes <= 0:
+        return 0, b""
+    with socket.create_connection((host, port), timeout=timeout) as sock:
+        sock.settimeout(timeout)
+        sent = 0
+        if data:
+            sock.sendall(data)
+            sent = len(data)
+        response = b""
+        if read_bytes > 0:
+            try:
+                response = sock.recv(read_bytes)
+            except socket.timeout:
+                response = b""
+        return sent, response
+
+
+def escpos_init() -> bytes:
+    return ESC + b"@"
+
+
+def escpos_align(name: str) -> bytes:
+    mapping = {"left": 0, "center": 1, "right": 2}
+    return ESC + b"a" + bytes([mapping.get(name, 0)])
+
+
+def escpos_bold(enabled: bool) -> bytes:
+    return ESC + b"E" + bytes([1 if enabled else 0])
+
+
+def escpos_size(width: int = 1, height: int = 1) -> bytes:
+    width = max(1, min(8, int(width)))
+    height = max(1, min(8, int(height)))
+    n = ((height - 1) << 4) | (width - 1)
+    return GS + b"!" + bytes([n])
+
+
+def escpos_density(density: int) -> bytes:
+    # SUNMI SDK exposes 70..130. ESC/POS has no single universal density command;
+    # this GS ( E vendor command is not guaranteed. Keep as raw best-effort off by default.
+    return b""
+
+
+def escpos_cut(partial: bool = True) -> bytes:
+    return GS + b"V" + bytes([66 if partial else 65, 0])
+
+
+def escpos_cash_drawer() -> bytes:
+    return ESC + b"p" + b"\x00\x40\xf0"
+
+
+def escpos_qr(text: str, module_size: int = 6, ec: int = 49) -> bytes:
+    payload = text.encode("utf-8")
+    cn = b"\x31"
+    out = bytearray()
+    out += GS + b"(k" + b"\x03\x00" + cn + b"C" + bytes([max(1, min(16, module_size))])
+    out += GS + b"(k" + b"\x03\x00" + cn + b"E" + bytes([ec])
+    length = len(payload) + 3
+    pL = length & 0xFF
+    pH = (length >> 8) & 0xFF
+    out += GS + b"(k" + bytes([pL, pH]) + cn + b"P0" + payload
+    out += GS + b"(k" + b"\x03\x00" + cn + b"Q0"
+    return bytes(out)
+
+
+def escpos_barcode_code128(text: str, height: int = 70, module_width: int = 2, hri: int = 2) -> bytes:
+    data = text.encode("ascii", "ignore")
+    if not data:
+        return b""
+    # CODE128 form: GS k 73 n {B data. Some printers also support type 73 directly.
+    body = b"{B" + data
+    return (
+        GS + b"h" + bytes([max(1, min(255, height))])
+        + GS + b"w" + bytes([max(2, min(6, module_width))])
+        + GS + b"H" + bytes([hri])
+        + GS + b"k" + b"\x49" + bytes([len(body)]) + body
+    )
+
+
+def fit_columns(left: str, right: str, columns: int) -> str:
+    columns = max(24, columns)
+    right = clean_text(right)
+    left = clean_text(left)
+    if len(right) >= columns:
+        return right[:columns]
+    left_width = columns - len(right)
+    if len(left) > left_width:
+        left = left[: max(0, left_width - 1)] + "…"
+    return left.ljust(left_width) + right
+
+
+def wrap_text(text: str, width: int) -> List[str]:
+    text = clean_text(text)
+    words = text.split()
+    if not words:
+        return [""]
+    lines: List[str] = []
+    current = ""
+    for word in words:
+        if not current:
+            current = word
+        elif len(current) + 1 + len(word) <= width:
+            current += " " + word
+        else:
+            lines.append(current)
+            current = word
+    if current:
+        lines.append(current)
+    return lines
+
+
+def center(text: str, columns: int) -> str:
+    text = clean_text(text)
+    if len(text) > columns:
+        text = text[:columns]
+    return text.center(columns)
+
+
+def build_receipt(job: Dict[str, Any]) -> bytes:
+    paper = str(job.get("paper", "80"))
+    columns = int(job.get("columns") or (32 if paper.startswith("58") else 48))
+    currency = str(job.get("currency", "$"))
+    store = clean_text(job.get("storeName", "OJO Store"), "OJO Store")
+    address = job.get("storeAddress", "")
+    phone = clean_text(job.get("storePhone", ""))
+    order_no = clean_text(job.get("orderNumber", job.get("order", "-")), "-")
+    cashier = clean_text(job.get("cashierName", job.get("cashier", "-")), "-")
+    tax_rate = float(job.get("taxRate", 0.0))
+    items = job.get("items") or []
+    footer = clean_text(job.get("footerText", job.get("footer", "Thank you")))
+    barcode = clean_text(job.get("barcode", job.get("barcodeValue", "")))
+    qr = clean_text(job.get("qr", job.get("qrValue", "")))
+    include_logo_text = bool(job.get("logoText", True))
+    cut = bool(job.get("cut", True))
+    cash_drawer = bool(job.get("cashDrawer", False))
+
+    out = bytearray()
+    out += escpos_init()
+    out += escpos_align("center")
+    if include_logo_text:
+        out += escpos_bold(True) + escpos_size(2, 2)
+        out += (store + "\n").encode("utf-8")
+        out += escpos_size(1, 1) + escpos_bold(False)
+    else:
+        out += escpos_bold(True)
+        out += (store + "\n").encode("utf-8")
+        out += escpos_bold(False)
+
+    if address:
+        for line in str(address).replace("\r", "").split("\n"):
+            for wrapped in wrap_text(line, columns):
+                out += (center(wrapped, columns) + "\n").encode("utf-8")
+    if phone:
+        out += (center(phone, columns) + "\n").encode("utf-8")
+
+    out += escpos_align("left")
+    out += ("-" * columns + "\n").encode("utf-8")
+    out += f"Order: {order_no}\n".encode("utf-8")
+    out += f"Cashier: {cashier}\n".encode("utf-8")
+    out += time.strftime("Date: %Y-%m-%d %H:%M\n").encode("utf-8")
+    out += ("-" * columns + "\n").encode("utf-8")
+
+    subtotal = 0.0
+    for item in items:
+        name = clean_text(item.get("name", "Item"), "Item")
+        qty = int(item.get("quantity", item.get("qty", 1)))
+        unit = float(item.get("unitPrice", item.get("price", 0.0)))
+        total = qty * unit
+        subtotal += total
+        out += (fit_columns(name, money(total, currency), columns) + "\n").encode("utf-8")
+        detail = f"  {qty} x {money(unit, currency)}"
+        out += (detail[:columns] + "\n").encode("utf-8")
+
+    tax = subtotal * tax_rate
+    total = subtotal + tax
+    out += ("-" * columns + "\n").encode("utf-8")
+    out += (fit_columns("Subtotal", money(subtotal, currency), columns) + "\n").encode("utf-8")
+    if tax_rate:
+        out += (fit_columns("Tax", money(tax, currency), columns) + "\n").encode("utf-8")
+    out += escpos_bold(True)
+    out += (fit_columns("TOTAL", money(total, currency), columns) + "\n").encode("utf-8")
+    out += escpos_bold(False)
+
+    if barcode:
+        out += b"\n" + escpos_align("center") + escpos_barcode_code128(barcode) + b"\n"
+    if qr:
+        out += b"\n" + escpos_align("center") + escpos_qr(qr, module_size=int(job.get("qrSize", 6))) + b"\n"
+    if footer:
+        out += escpos_align("center")
+        for line in wrap_text(footer, columns):
+            out += (center(line, columns) + "\n").encode("utf-8")
+    out += b"\n\n\n"
+    if cash_drawer:
+        out += escpos_cash_drawer()
+    if cut:
+        out += escpos_cut(partial=True)
+    return bytes(out)
+
+
+def tspl_escape(value: Any, fallback: str = "") -> str:
+    text = clean_text(value, fallback)
+    return text.replace('\\', '/').replace('"', "'")
+
+
+def build_label(job: Dict[str, Any]) -> bytes:
+    width = float(job.get("widthMM", job.get("width", 50)))
+    height = float(job.get("heightMM", job.get("height", 20)))
+    gap = float(job.get("gapMM", job.get("gap", 3)))
+    speed = int(job.get("speed", 3))
+    density = int(job.get("density", 12))
+    copies = int(job.get("copies", 1))
+    title = tspl_escape(job.get("title", job.get("brand", "OJO")))
+    subtitle = tspl_escape(job.get("subtitle", job.get("productName", "Sample Item")))
+    price = tspl_escape(job.get("price", "$9.99"))
+    barcode = tspl_escape(job.get("barcode", job.get("sku", "SKU001234")))
+    qr = tspl_escape(job.get("qr", job.get("qrValue", barcode)))
+    include_qr = bool(job.get("includeQR", True))
+
+    wd = max(160, round(width * 8))
+    hd = max(80, round(height * 8))
+    right_x = max(220, wd - 104)
+    barcode_y = max(70, hd - 82)
+    barcode_h = min(46, max(28, hd - barcode_y - 34))
+    bottom_y = max(70, hd - 34)
+
+    lines = [
+        f"SIZE {width:g} mm,{height:g} mm",
+        f"GAP {gap:g} mm,0",
+        f"SPEED {speed}",
+        f"DENSITY {density}",
+        "DIRECTION 1",
+        "REFERENCE 0,0",
+        "OFFSET 0 mm",
+    ]
+    if job.get("home", False):
+        lines.append("HOME")
+    lines.extend([
+        "CLS",
+        f"BAR 8,8,{max(10, wd - 16)},3",
+        f"BAR 8,{max(12, hd - 10)},{max(10, wd - 16)},3",
+        f'TEXT 18,18,"3",0,1,1,"{title[:24]}"',
+        f'TEXT 18,52,"1",0,1,1,"{subtitle[:32]}"',
+        f'BARCODE 18,{barcode_y},"128",{barcode_h},0,0,2,2,"{barcode[:24]}"',
+        f'TEXT 18,{bottom_y},"1",0,1,1,"{barcode[:24]}"',
+        f'TEXT {right_x},22,"3",0,1,1,"{price[:12]}"',
+    ])
+    if include_qr and wd >= 360 and hd >= 150:
+        lines.append(f'QRCODE {right_x},{max(66, hd - 88)},L,3,A,0,"{qr[:64]}"')
+    lines.append(f"PRINT {max(1, copies)},1")
+    return ("\r\n".join(lines) + "\r\n").encode("utf-8")
+
+
+def build_calibrate_label(args: argparse.Namespace) -> bytes:
+    return (
+        f"SIZE {args.width:g} mm,{args.height:g} mm\r\n"
+        f"GAP {args.gap:g} mm,0\r\n"
+        "GAPDECTECT\r\n"
+        "HOME\r\n"
+    ).encode("utf-8")
+
+
+def parse_pbm(path: str) -> Tuple[int, int, List[int]]:
+    data = Path(path).read_bytes()
+    tokens: List[bytes] = []
+    i = 0
+    while len(tokens) < 3 and i < len(data):
+        while i < len(data) and data[i] in b" \t\r\n":
+            i += 1
+        if i < len(data) and data[i] == ord("#"):
+            while i < len(data) and data[i] not in b"\r\n":
+                i += 1
+            continue
+        start = i
+        while i < len(data) and data[i] not in b" \t\r\n":
+            i += 1
+        if start < i:
+            tokens.append(data[start:i])
+    if len(tokens) < 3:
+        raise ValueError("Invalid PBM header")
+    magic, w_s, h_s = tokens
+    width, height = int(w_s), int(h_s)
+    pixels: List[int] = []
+    if magic == b"P1":
+        rest = data[i:].decode("ascii", "ignore")
+        vals = [v for v in rest.replace("\n", " ").split(" ") if v and not v.startswith("#")]
+        pixels = [1 if v == "1" else 0 for v in vals[: width * height]]
+    elif magic == b"P4":
+        while i < len(data) and data[i] in b" \t\r\n":
+            i += 1
+        row_bytes = (width + 7) // 8
+        raw = data[i : i + row_bytes * height]
+        for y in range(height):
+            row = raw[y * row_bytes : (y + 1) * row_bytes]
+            for x in range(width):
+                pixels.append(1 if row[x // 8] & (0x80 >> (x % 8)) else 0)
+    else:
+        raise ValueError("Only PBM P1/P4 images are supported without dependencies")
+    if len(pixels) < width * height:
+        raise ValueError("PBM image data is incomplete")
+    return width, height, pixels
+
+
+def escpos_raster_from_pbm(path: str, max_width: int) -> bytes:
+    width, height, pixels = parse_pbm(path)
+    if width > max_width:
+        raise ValueError(f"PBM width {width} exceeds max printable width {max_width}; resize before printing")
+    row_bytes = (width + 7) // 8
+    raster = bytearray(row_bytes * height)
+    for y in range(height):
+        for x in range(width):
+            if pixels[y * width + x]:
+                raster[y * row_bytes + x // 8] |= 0x80 >> (x % 8)
+    xL, xH = row_bytes & 0xFF, (row_bytes >> 8) & 0xFF
+    yL, yH = height & 0xFF, (height >> 8) & 0xFF
+    return escpos_init() + escpos_align("center") + GS + b"v0" + b"\x00" + bytes([xL, xH, yL, yH]) + bytes(raster) + b"\n"
+
+
+def command_receipt(args: argparse.Namespace) -> None:
+    job = read_json_arg(args.json) if args.json else sample_receipt_job()
+    data = build_receipt(job)
+    if args.preview:
+        sys.stdout.buffer.write(data)
+        return
+    sent, _ = send_tcp(args.ip, args.port, data, args.timeout)
+    print_json(Result(True, "receipt sent", sent, "escpos", "tcp", args.ip, args.port).to_dict())
+
+
+def command_label(args: argparse.Namespace) -> None:
+    job = read_json_arg(args.json) if args.json else sample_label_job()
+    data = build_label(job)
+    if args.preview:
+        sys.stdout.buffer.write(data)
+        return
+    sent, _ = send_tcp(args.ip, args.port, data, args.timeout)
+    print_json(Result(True, "label sent", sent, "tspl", "tcp", args.ip, args.port).to_dict())
+
+
+def command_calibrate_label(args: argparse.Namespace) -> None:
+    data = build_calibrate_label(args)
+    if args.preview:
+        sys.stdout.buffer.write(data)
+        return
+    sent, _ = send_tcp(args.ip, args.port, data, args.timeout)
+    print_json(Result(True, "label calibration sent", sent, "tspl", "tcp", args.ip, args.port).to_dict())
+
+
+def command_raw(args: argparse.Namespace) -> None:
+    chunks: List[bytes] = []
+    if args.file:
+        chunks.append(Path(args.file).read_bytes())
+    if args.text is not None:
+        chunks.append(args.text.encode("utf-8"))
+    if args.hex is not None:
+        chunks.append(binascii.unhexlify(args.hex.replace(" ", "")))
+    if args.base64 is not None:
+        chunks.append(base64.b64decode(args.base64))
+    data = b"".join(chunks)
+    if not data:
+        fail("no raw data supplied; use --file, --text, --hex, or --base64")
+    sent, response = send_tcp(args.ip, args.port, data, args.timeout, read_bytes=args.read)
+    print_json(Result(True, "raw data sent", sent, args.protocol, "tcp", args.ip, args.port, extra={"responseHex": response.hex()}).to_dict())
+
+
+def command_image(args: argparse.Namespace) -> None:
+    data = escpos_raster_from_pbm(args.pbm, args.max_width)
+    if args.cut:
+        data += b"\n\n" + escpos_cut(partial=True)
+    sent, _ = send_tcp(args.ip, args.port, data, args.timeout)
+    print_json(Result(True, "PBM image sent", sent, "escpos-raster", "tcp", args.ip, args.port).to_dict())
+
+
+def decode_escpos_status(n: int, value: Optional[int]) -> Dict[str, Any]:
+    if value is None:
+        return {"n": n, "received": False}
+    info: Dict[str, Any] = {"n": n, "received": True, "byte": value, "hex": f"{value:02x}"}
+    if n == 1:
+        info.update({"online": not bool(value & 0x08), "coverOpen": bool(value & 0x20)})
+    elif n == 2:
+        info.update({"drawerPinHigh": bool(value & 0x04), "offline": bool(value & 0x08)})
+    elif n == 3:
+        info.update({"paperNearEnd": bool(value & 0x0C), "paperEnd": bool(value & 0x60)})
+    elif n == 4:
+        info.update({"recoverableError": bool(value & 0x0C), "cutterError": bool(value & 0x08), "unrecoverableError": bool(value & 0x20)})
+    return info
+
+
+def command_status(args: argparse.Namespace) -> None:
+    statuses = []
+    for n in [1, 2, 3, 4]:
+        try:
+            _, response = send_tcp(args.ip, args.port, DLE + EOT + bytes([n]), args.timeout, read_bytes=1)
+            value = response[0] if response else None
+            statuses.append(decode_escpos_status(n, value))
+        except Exception as exc:
+            statuses.append({"n": n, "received": False, "error": str(exc)})
+    ok = any(s.get("received") for s in statuses)
+    print_json({"ok": ok, "protocol": "escpos-status", "host": args.ip, "port": args.port, "statuses": statuses})
+
+
+def command_discover(args: argparse.Namespace) -> None:
+    network = ipaddress.ip_network(args.subnet, strict=False)
+    hosts = [str(h) for h in network.hosts()]
+    found: List[Dict[str, Any]] = []
+
+    def probe(host: str) -> Optional[Dict[str, Any]]:
+        try:
+            with socket.create_connection((host, args.port), timeout=args.timeout):
+                return {"host": host, "port": args.port, "open": True}
+        except Exception:
+            return None
+
+    with ThreadPoolExecutor(max_workers=args.workers) as pool:
+        futures = [pool.submit(probe, host) for host in hosts]
+        for future in as_completed(futures):
+            item = future.result()
+            if item:
+                found.append(item)
+    found.sort(key=lambda x: ipaddress.ip_address(x["host"]))
+    print_json({"ok": True, "subnet": args.subnet, "port": args.port, "printers": found})
+
+
+def command_job(args: argparse.Namespace) -> None:
+    spec = read_json_arg(args.json)
+    transport = spec.get("transport", {})
+    host = args.ip or transport.get("host") or spec.get("ip")
+    if not host:
+        fail("job requires transport.host or --ip")
+    port = int(args.port or transport.get("port") or DEFAULT_PORT)
+    mode = spec.get("mode", "receipt")
+    job = spec.get("job", spec)
+    if mode == "receipt":
+        data = build_receipt(job)
+        protocol = "escpos"
+    elif mode == "label":
+        data = build_label(job)
+        protocol = "tspl"
+    elif mode == "raw":
+        raw = job.get("base64")
+        if raw:
+            data = base64.b64decode(raw)
+        elif "hex" in job:
+            data = binascii.unhexlify(str(job["hex"]).replace(" ", ""))
+        elif "text" in job:
+            data = str(job["text"]).encode("utf-8")
+        else:
+            fail("raw job requires base64, hex, or text")
+        protocol = spec.get("protocol", "raw")
+    else:
+        fail(f"unknown mode: {mode}")
+    if args.preview:
+        sys.stdout.buffer.write(data)
+        return
+    sent, _ = send_tcp(host, port, data, args.timeout)
+    print_json(Result(True, "job sent", sent, protocol, "tcp", host, port).to_dict())
+
+
+def command_media(args: argparse.Namespace) -> None:
+    message = (
+        "There is no reliable standard ESC/POS or TSPL query for the loaded receipt roll width "
+        "or label size. Receipt paper width is usually inferred from printer model/head width; "
+        "label width is not sensed, and label height/gap can be calibrated by the gap/black-mark "
+        "sensor but generally is not returned over raw TCP. Store media size in your app config and "
+        "use calibrate-label after changing label rolls."
+    )
+    print_json({
+        "ok": True,
+        "canQueryInstalledMediaSize": False,
+        "message": message,
+        "receiptRecommendation": "Use paper=80/columns=48 for 80mm or paper=58/columns=32 for 58mm; print a width-test if unsure.",
+        "labelRecommendation": "Know widthMM/heightMM/gapMM from the roll, send SIZE/GAP in each TSPL job, run calibrate-label after loading media.",
+        "statusAvailable": "ESC/POS DLE EOT can often return online/paper/error status, but not loaded paper size.",
+    })
+
+
+def command_width_test(args: argparse.Namespace) -> None:
+    columns = int(args.columns)
+    job = {
+        "paper": args.paper,
+        "columns": columns,
+        "storeName": "WIDTH TEST",
+        "storeAddress": f"If this line clips, reduce columns/width. Columns={columns}",
+        "items": [
+            {"name": "Left edge -> right edge", "quantity": 1, "unitPrice": 0},
+        ],
+        "footer": "0123456789" * ((columns // 10) + 1),
+        "cut": True,
+        "logoText": False,
+    }
+    data = build_receipt(job)
+    sent, _ = send_tcp(args.ip, args.port, data, args.timeout)
+    print_json(Result(True, "width test sent", sent, "escpos", "tcp", args.ip, args.port).to_dict())
+
+
+def command_doctor(args: argparse.Namespace) -> None:
+    checks: Dict[str, Any] = {
+        "python": sys.version.split()[0],
+        "executable": sys.executable,
+        "cwd": os.getcwd(),
+    }
+    if args.ip:
+        try:
+            with socket.create_connection((args.ip, args.port), timeout=args.timeout):
+                checks["tcp"] = {"ok": True, "host": args.ip, "port": args.port}
+        except Exception as exc:
+            checks["tcp"] = {"ok": False, "host": args.ip, "port": args.port, "error": str(exc)}
+    print_json({"ok": True, "checks": checks})
+
+
+def sample_receipt_job() -> Dict[str, Any]:
+    return {
+        "paper": "80",
+        "storeName": "OJO Store",
+        "storeAddress": "123 Market Street\nSan Francisco, CA",
+        "storePhone": "+1 555 0100",
+        "orderNumber": "R-10042",
+        "cashier": "Alex",
+        "taxRate": 0.0825,
+        "items": [
+            {"name": "Thermal Label Roll", "quantity": 1, "unitPrice": 8.99},
+            {"name": "Coffee", "quantity": 2, "unitPrice": 3.50},
+            {"name": "Notebook", "quantity": 1, "unitPrice": 5.25},
+        ],
+        "barcode": "100420001234",
+        "qr": "https://ojo.example/receipt/R-10042",
+        "footer": "Thank you for shopping with us",
+        "cut": True,
+    }
+
+
+def sample_label_job() -> Dict[str, Any]:
+    return {
+        "widthMM": 50,
+        "heightMM": 20,
+        "gapMM": 3,
+        "speed": 3,
+        "density": 12,
+        "title": "OJO",
+        "subtitle": "Thermal Label Roll",
+        "price": "$8.99",
+        "barcode": "SKU001234",
+        "qr": "https://ojo.example/SKU001234",
+    }
+
+
+def add_network_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--ip", required=True, help="printer IP/host")
+    parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="raw TCP port, usually 9100")
+    parser.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT, help="socket timeout seconds")
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="ojo-print", description="Terminal/agent printer CLI for SUNMI receipt and label printers")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p = sub.add_parser("doctor", help="show environment and optionally test TCP connectivity")
+    p.add_argument("--ip", help="optional printer IP/host")
+    p.add_argument("--port", type=int, default=DEFAULT_PORT)
+    p.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT)
+    p.set_defaults(func=command_doctor)
+
+    p = sub.add_parser("discover", help="scan a subnet for open raw printer TCP ports")
+    p.add_argument("--subnet", required=True, help="CIDR subnet, e.g. 192.168.0.0/24")
+    p.add_argument("--port", type=int, default=DEFAULT_PORT)
+    p.add_argument("--timeout", type=float, default=0.35)
+    p.add_argument("--workers", type=int, default=64)
+    p.set_defaults(func=command_discover)
+
+    p = sub.add_parser("receipt", help="print an ESC/POS receipt from JSON or sample data")
+    add_network_args(p)
+    p.add_argument("--json", help="receipt JSON file, or - for stdin")
+    p.add_argument("--preview", action="store_true", help="write generated bytes to stdout instead of printing")
+    p.set_defaults(func=command_receipt)
+
+    p = sub.add_parser("label", help="print a TSPL label from JSON or sample data")
+    add_network_args(p)
+    p.add_argument("--json", help="label JSON file, or - for stdin")
+    p.add_argument("--preview", action="store_true", help="write generated TSPL to stdout instead of printing")
+    p.set_defaults(func=command_label)
+
+    p = sub.add_parser("calibrate-label", help="send TSPL gap calibration/alignment")
+    add_network_args(p)
+    p.add_argument("--width", type=float, default=50)
+    p.add_argument("--height", type=float, default=20)
+    p.add_argument("--gap", type=float, default=3)
+    p.add_argument("--preview", action="store_true")
+    p.set_defaults(func=command_calibrate_label)
+
+    p = sub.add_parser("raw", help="send raw bytes/text/hex/base64")
+    add_network_args(p)
+    p.add_argument("--protocol", default="raw", help="metadata only: raw, escpos, tspl")
+    p.add_argument("--file", help="binary/raw command file")
+    p.add_argument("--text", help="UTF-8 text/commands to send")
+    p.add_argument("--hex", help="hex bytes to send")
+    p.add_argument("--base64", help="base64 bytes to send")
+    p.add_argument("--read", type=int, default=0, help="read up to N response bytes")
+    p.set_defaults(func=command_raw)
+
+    p = sub.add_parser("image", help="print a monochrome PBM image using ESC/POS raster image")
+    add_network_args(p)
+    p.add_argument("--pbm", required=True, help="PBM P1/P4 image path")
+    p.add_argument("--max-width", type=int, default=576, help="max printable image width in dots")
+    p.add_argument("--cut", action="store_true")
+    p.set_defaults(func=command_image)
+
+    p = sub.add_parser("status", help="try ESC/POS real-time status queries")
+    add_network_args(p)
+    p.set_defaults(func=command_status)
+
+    p = sub.add_parser("media", help="explain media-size detection limitations")
+    p.set_defaults(func=command_media)
+
+    p = sub.add_parser("width-test", help="print receipt width/columns test")
+    add_network_args(p)
+    p.add_argument("--paper", default="80")
+    p.add_argument("--columns", type=int, default=48)
+    p.set_defaults(func=command_width_test)
+
+    p = sub.add_parser("job", help="run a machine-readable job JSON")
+    p.add_argument("--json", required=True, help="job JSON file, or - for stdin")
+    p.add_argument("--ip", help="override transport.host")
+    p.add_argument("--port", type=int, help="override transport.port")
+    p.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT)
+    p.add_argument("--preview", action="store_true")
+    p.set_defaults(func=command_job)
+
+    return parser
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    try:
+        args.func(args)
+        return 0
+    except BrokenPipeError:
+        return 0
+    except SystemExit:
+        raise
+    except Exception as exc:
+        fail(str(exc), code=2)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

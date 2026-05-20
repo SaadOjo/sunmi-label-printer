@@ -1,0 +1,673 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		5E53ED58FCC1E1DDECF7C2FC /* Pods_MacOSApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E6DC9133B271FE9233DC6BB /* Pods_MacOSApp.framework */; };
+		E61E772D2AFDC78A003982E2 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E772C2AFDC78A003982E2 /* AppDelegate.m */; };
+		E61E77302AFDC78A003982E2 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E772F2AFDC78A003982E2 /* ViewController.m */; };
+		E61E77322AFDC78D003982E2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E61E77312AFDC78D003982E2 /* Assets.xcassets */; };
+		E61E77352AFDC78D003982E2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E61E77332AFDC78D003982E2 /* Main.storyboard */; };
+		E61E77372AFDC78D003982E2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E77362AFDC78D003982E2 /* main.m */; };
+		E61E77702B0203DB003982E2 /* SMTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E776F2B0203DB003982E2 /* SMTableViewCell.m */; };
+		E61E77732B0466EA003982E2 /* DeviceListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E77722B0466EA003982E2 /* DeviceListViewController.m */; };
+		E61E77772B04C0F8003982E2 /* PrinterSettingEntranceController.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E77762B04C0F8003982E2 /* PrinterSettingEntranceController.m */; };
+		E61E777A2B04C112003982E2 /* PrinterSearchingController.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E77792B04C112003982E2 /* PrinterSearchingController.m */; };
+		E61E777D2B04C125003982E2 /* PrinterWifiListController.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E777C2B04C125003982E2 /* PrinterWifiListController.m */; };
+		E61E77842B05F605003982E2 /* EmptyRefreshView.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E77832B05F605003982E2 /* EmptyRefreshView.m */; };
+		E61E778F2B06174C003982E2 /* SYFlatButton.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E778E2B06174C003982E2 /* SYFlatButton.m */; };
+		E61E77972B07472F003982E2 /* SMAlert.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E77962B07472F003982E2 /* SMAlert.m */; };
+		E61E77A32B07566D003982E2 /* SMIndicator.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E77A22B07566D003982E2 /* SMIndicator.m */; };
+		E61E77A62B0AF2C4003982E2 /* SMInput.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E77A52B0AF2C4003982E2 /* SMInput.m */; };
+		E61E77AA2B0B083D003982E2 /* CustomTableCellView.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E77A92B0B083D003982E2 /* CustomTableCellView.m */; };
+		E61E77B12B0B4C75003982E2 /* SMVerticallyCenteredTextFieldCell.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E77B02B0B4C75003982E2 /* SMVerticallyCenteredTextFieldCell.m */; };
+		E61E77B42B0B50FB003982E2 /* SMVerticallyCenteredTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = E61E77B32B0B50FB003982E2 /* SMVerticallyCenteredTextField.m */; };
+		E69BC24A2B14712D00001D47 /* SunmiPrinterMacOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E69BC2492B14712D00001D47 /* SunmiPrinterMacOS.framework */; };
+		A1B2C3D4E5F60718293A4B5E /* SunmiUSBPrinterManager.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5D /* SunmiUSBPrinterManager.m */; };
+		A1B2C3D4E5F60718293A4B60 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5F /* IOKit.framework */; };
+		A1B2C3D4E5F60718293A4B77 /* SMLabelPrintSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B72 /* SMLabelPrintSettings.m */; };
+		A1B2C3D4E5F60718293A4B78 /* SMLabelContent.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B74 /* SMLabelContent.m */; };
+		A1B2C3D4E5F60718293A4B79 /* SMLabelCommandBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B76 /* SMLabelCommandBuilder.m */; };
+		A1B2C3D4E5F60718293A4B83 /* SMPrinterConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B82 /* SMPrinterConnection.m */; };
+		A1B2C3D4E5F60718293A4C04 /* SMReceiptPrintSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4C01 /* SMReceiptPrintSettings.m */; };
+		A1B2C3D4E5F60718293A4C05 /* SMReceiptContent.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4C03 /* SMReceiptContent.m */; };
+		A1B2C3D4E5F60718293A4C08 /* SMReceiptCommandBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4C07 /* SMReceiptCommandBuilder.m */; };
+		A1B2C3D4E5F60718293A4D04 /* SMDesignerElement.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4D01 /* SMDesignerElement.m */; };
+		A1B2C3D4E5F60718293A4D05 /* SMLabelDesignerCanvasView.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4D03 /* SMLabelDesignerCanvasView.m */; };
+		A1B2C3D4E5F60718293A4D08 /* SMLabelRasterCommandBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4D07 /* SMLabelRasterCommandBuilder.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		08C219270B5BF9A5B089786D /* Pods-MacOSApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MacOSApp.debug.xcconfig"; path = "Target Support Files/Pods-MacOSApp/Pods-MacOSApp.debug.xcconfig"; sourceTree = "<group>"; };
+		6159A83173F87C733428C1CA /* Pods-MacOSApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MacOSApp.release.xcconfig"; path = "Target Support Files/Pods-MacOSApp/Pods-MacOSApp.release.xcconfig"; sourceTree = "<group>"; };
+		9E6DC9133B271FE9233DC6BB /* Pods_MacOSApp.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MacOSApp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		E61E77282AFDC78A003982E2 /* MacOSApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacOSApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E61E772B2AFDC78A003982E2 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		E61E772C2AFDC78A003982E2 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		E61E772E2AFDC78A003982E2 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		E61E772F2AFDC78A003982E2 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		E61E77312AFDC78D003982E2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E61E77342AFDC78D003982E2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		E61E77362AFDC78D003982E2 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		E61E77382AFDC78D003982E2 /* MacOSApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MacOSApp.entitlements; sourceTree = "<group>"; };
+		E61E77432AFDCDAC003982E2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		E61E776E2B0203DB003982E2 /* SMTableViewCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMTableViewCell.h; sourceTree = "<group>"; };
+		E61E776F2B0203DB003982E2 /* SMTableViewCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMTableViewCell.m; sourceTree = "<group>"; };
+		E61E77712B0466EA003982E2 /* DeviceListViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceListViewController.h; sourceTree = "<group>"; };
+		E61E77722B0466EA003982E2 /* DeviceListViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceListViewController.m; sourceTree = "<group>"; };
+		E61E77742B046746003982E2 /* SunmiPrinterPrefixHeader.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SunmiPrinterPrefixHeader.pch; sourceTree = "<group>"; };
+		E61E77752B04C0F8003982E2 /* PrinterSettingEntranceController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrinterSettingEntranceController.h; sourceTree = "<group>"; };
+		E61E77762B04C0F8003982E2 /* PrinterSettingEntranceController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PrinterSettingEntranceController.m; sourceTree = "<group>"; };
+		E61E77782B04C112003982E2 /* PrinterSearchingController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrinterSearchingController.h; sourceTree = "<group>"; };
+		E61E77792B04C112003982E2 /* PrinterSearchingController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PrinterSearchingController.m; sourceTree = "<group>"; };
+		E61E777B2B04C125003982E2 /* PrinterWifiListController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrinterWifiListController.h; sourceTree = "<group>"; };
+		E61E777C2B04C125003982E2 /* PrinterWifiListController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PrinterWifiListController.m; sourceTree = "<group>"; };
+		E61E77822B05F605003982E2 /* EmptyRefreshView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EmptyRefreshView.h; sourceTree = "<group>"; };
+		E61E77832B05F605003982E2 /* EmptyRefreshView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EmptyRefreshView.m; sourceTree = "<group>"; };
+		E61E778D2B06174C003982E2 /* SYFlatButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SYFlatButton.h; sourceTree = "<group>"; };
+		E61E778E2B06174C003982E2 /* SYFlatButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SYFlatButton.m; sourceTree = "<group>"; };
+		E61E77952B07472F003982E2 /* SMAlert.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMAlert.h; sourceTree = "<group>"; };
+		E61E77962B07472F003982E2 /* SMAlert.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMAlert.m; sourceTree = "<group>"; };
+		E61E77A12B07566D003982E2 /* SMIndicator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMIndicator.h; sourceTree = "<group>"; };
+		E61E77A22B07566D003982E2 /* SMIndicator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMIndicator.m; sourceTree = "<group>"; };
+		E61E77A42B0AF2C4003982E2 /* SMInput.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMInput.h; sourceTree = "<group>"; };
+		E61E77A52B0AF2C4003982E2 /* SMInput.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMInput.m; sourceTree = "<group>"; };
+		E61E77A82B0B083D003982E2 /* CustomTableCellView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CustomTableCellView.h; sourceTree = "<group>"; };
+		E61E77A92B0B083D003982E2 /* CustomTableCellView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CustomTableCellView.m; sourceTree = "<group>"; };
+		E61E77AF2B0B4C75003982E2 /* SMVerticallyCenteredTextFieldCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMVerticallyCenteredTextFieldCell.h; sourceTree = "<group>"; };
+		E61E77B02B0B4C75003982E2 /* SMVerticallyCenteredTextFieldCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMVerticallyCenteredTextFieldCell.m; sourceTree = "<group>"; };
+		E61E77B22B0B50FB003982E2 /* SMVerticallyCenteredTextField.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMVerticallyCenteredTextField.h; sourceTree = "<group>"; };
+		E61E77B32B0B50FB003982E2 /* SMVerticallyCenteredTextField.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMVerticallyCenteredTextField.m; sourceTree = "<group>"; };
+		E69BC2492B14712D00001D47 /* SunmiPrinterMacOS.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SunmiPrinterMacOS.framework; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5C /* SunmiUSBPrinterManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SunmiUSBPrinterManager.h; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5D /* SunmiUSBPrinterManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SunmiUSBPrinterManager.m; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5F /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		A1B2C3D4E5F60718293A4B71 /* SMLabelPrintSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMLabelPrintSettings.h; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B72 /* SMLabelPrintSettings.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMLabelPrintSettings.m; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B73 /* SMLabelContent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMLabelContent.h; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B74 /* SMLabelContent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMLabelContent.m; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B75 /* SMLabelCommandBuilder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMLabelCommandBuilder.h; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B76 /* SMLabelCommandBuilder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMLabelCommandBuilder.m; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B81 /* SMPrinterConnection.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMPrinterConnection.h; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B82 /* SMPrinterConnection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMPrinterConnection.m; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4C00 /* SMReceiptPrintSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMReceiptPrintSettings.h; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4C01 /* SMReceiptPrintSettings.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMReceiptPrintSettings.m; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4C02 /* SMReceiptContent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMReceiptContent.h; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4C03 /* SMReceiptContent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMReceiptContent.m; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4C06 /* SMReceiptCommandBuilder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMReceiptCommandBuilder.h; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4C07 /* SMReceiptCommandBuilder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMReceiptCommandBuilder.m; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4D00 /* SMDesignerElement.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMDesignerElement.h; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4D01 /* SMDesignerElement.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMDesignerElement.m; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4D02 /* SMLabelDesignerCanvasView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMLabelDesignerCanvasView.h; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4D03 /* SMLabelDesignerCanvasView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMLabelDesignerCanvasView.m; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4D06 /* SMLabelRasterCommandBuilder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMLabelRasterCommandBuilder.h; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4D07 /* SMLabelRasterCommandBuilder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SMLabelRasterCommandBuilder.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E61E77252AFDC78A003982E2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1B2C3D4E5F60718293A4B60 /* IOKit.framework in Frameworks */,
+				E69BC24A2B14712D00001D47 /* SunmiPrinterMacOS.framework in Frameworks */,
+				5E53ED58FCC1E1DDECF7C2FC /* Pods_MacOSApp.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		38302AA000F611E4392CAF80 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F60718293A4B5F /* IOKit.framework */,
+				9E6DC9133B271FE9233DC6BB /* Pods_MacOSApp.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		E5E93C9CE21D90342240C641 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				08C219270B5BF9A5B089786D /* Pods-MacOSApp.debug.xcconfig */,
+				6159A83173F87C733428C1CA /* Pods-MacOSApp.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		E61E771F2AFDC78A003982E2 = {
+			isa = PBXGroup;
+			children = (
+				E69BC2492B14712D00001D47 /* SunmiPrinterMacOS.framework */,
+				E61E772A2AFDC78A003982E2 /* MacOSApp */,
+				E61E77292AFDC78A003982E2 /* Products */,
+				E5E93C9CE21D90342240C641 /* Pods */,
+				38302AA000F611E4392CAF80 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		E61E77292AFDC78A003982E2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E61E77282AFDC78A003982E2 /* MacOSApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F60718293A4B70 /* LabelPrinting */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F60718293A4B71 /* SMLabelPrintSettings.h */,
+				A1B2C3D4E5F60718293A4B72 /* SMLabelPrintSettings.m */,
+				A1B2C3D4E5F60718293A4B73 /* SMLabelContent.h */,
+				A1B2C3D4E5F60718293A4B74 /* SMLabelContent.m */,
+				A1B2C3D4E5F60718293A4B75 /* SMLabelCommandBuilder.h */,
+				A1B2C3D4E5F60718293A4B76 /* SMLabelCommandBuilder.m */,
+			);
+			path = LabelPrinting;
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F60718293A4B80 /* PrinterConnection */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F60718293A4B81 /* SMPrinterConnection.h */,
+				A1B2C3D4E5F60718293A4B82 /* SMPrinterConnection.m */,
+			);
+			path = PrinterConnection;
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F60718293A4C09 /* ReceiptPrinting */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F60718293A4C00 /* SMReceiptPrintSettings.h */,
+				A1B2C3D4E5F60718293A4C01 /* SMReceiptPrintSettings.m */,
+				A1B2C3D4E5F60718293A4C02 /* SMReceiptContent.h */,
+				A1B2C3D4E5F60718293A4C03 /* SMReceiptContent.m */,
+				A1B2C3D4E5F60718293A4C06 /* SMReceiptCommandBuilder.h */,
+				A1B2C3D4E5F60718293A4C07 /* SMReceiptCommandBuilder.m */,
+			);
+			path = ReceiptPrinting;
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F60718293A4D09 /* LabelDesigner */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F60718293A4D00 /* SMDesignerElement.h */,
+				A1B2C3D4E5F60718293A4D01 /* SMDesignerElement.m */,
+				A1B2C3D4E5F60718293A4D02 /* SMLabelDesignerCanvasView.h */,
+				A1B2C3D4E5F60718293A4D03 /* SMLabelDesignerCanvasView.m */,
+				A1B2C3D4E5F60718293A4D06 /* SMLabelRasterCommandBuilder.h */,
+				A1B2C3D4E5F60718293A4D07 /* SMLabelRasterCommandBuilder.m */,
+			);
+			path = LabelDesigner;
+			sourceTree = "<group>";
+		};
+		E61E772A2AFDC78A003982E2 /* MacOSApp */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F60718293A4B70 /* LabelPrinting */,
+				A1B2C3D4E5F60718293A4B80 /* PrinterConnection */,
+				A1B2C3D4E5F60718293A4C09 /* ReceiptPrinting */,
+				A1B2C3D4E5F60718293A4D09 /* LabelDesigner */,
+				E61E77A72B0B07F4003982E2 /* Cells */,
+				E61E77A02B075643003982E2 /* SMIndicator */,
+				E61E77942B074716003982E2 /* SMAlert */,
+				E61E778C2B06174C003982E2 /* SYFlatButton */,
+				E61E778B2B060494003982E2 /* EmptyView */,
+				E61E77432AFDCDAC003982E2 /* Info.plist */,
+				E61E772B2AFDC78A003982E2 /* AppDelegate.h */,
+				E61E772C2AFDC78A003982E2 /* AppDelegate.m */,
+				E61E77742B046746003982E2 /* SunmiPrinterPrefixHeader.pch */,
+				E61E772E2AFDC78A003982E2 /* ViewController.h */,
+				E61E772F2AFDC78A003982E2 /* ViewController.m */,
+				A1B2C3D4E5F60718293A4B5C /* SunmiUSBPrinterManager.h */,
+				A1B2C3D4E5F60718293A4B5D /* SunmiUSBPrinterManager.m */,
+				E61E77712B0466EA003982E2 /* DeviceListViewController.h */,
+				E61E77722B0466EA003982E2 /* DeviceListViewController.m */,
+				E61E77752B04C0F8003982E2 /* PrinterSettingEntranceController.h */,
+				E61E77762B04C0F8003982E2 /* PrinterSettingEntranceController.m */,
+				E61E77782B04C112003982E2 /* PrinterSearchingController.h */,
+				E61E77792B04C112003982E2 /* PrinterSearchingController.m */,
+				E61E777B2B04C125003982E2 /* PrinterWifiListController.h */,
+				E61E777C2B04C125003982E2 /* PrinterWifiListController.m */,
+				E61E77312AFDC78D003982E2 /* Assets.xcassets */,
+				E61E77332AFDC78D003982E2 /* Main.storyboard */,
+				E61E77362AFDC78D003982E2 /* main.m */,
+				E61E77382AFDC78D003982E2 /* MacOSApp.entitlements */,
+			);
+			path = MacOSApp;
+			sourceTree = "<group>";
+		};
+		E61E778B2B060494003982E2 /* EmptyView */ = {
+			isa = PBXGroup;
+			children = (
+				E61E77822B05F605003982E2 /* EmptyRefreshView.h */,
+				E61E77832B05F605003982E2 /* EmptyRefreshView.m */,
+			);
+			path = EmptyView;
+			sourceTree = "<group>";
+		};
+		E61E778C2B06174C003982E2 /* SYFlatButton */ = {
+			isa = PBXGroup;
+			children = (
+				E61E778D2B06174C003982E2 /* SYFlatButton.h */,
+				E61E778E2B06174C003982E2 /* SYFlatButton.m */,
+			);
+			path = SYFlatButton;
+			sourceTree = "<group>";
+		};
+		E61E77942B074716003982E2 /* SMAlert */ = {
+			isa = PBXGroup;
+			children = (
+				E61E77952B07472F003982E2 /* SMAlert.h */,
+				E61E77962B07472F003982E2 /* SMAlert.m */,
+				E61E77A42B0AF2C4003982E2 /* SMInput.h */,
+				E61E77A52B0AF2C4003982E2 /* SMInput.m */,
+			);
+			path = SMAlert;
+			sourceTree = "<group>";
+		};
+		E61E77A02B075643003982E2 /* SMIndicator */ = {
+			isa = PBXGroup;
+			children = (
+				E61E77A12B07566D003982E2 /* SMIndicator.h */,
+				E61E77A22B07566D003982E2 /* SMIndicator.m */,
+			);
+			path = SMIndicator;
+			sourceTree = "<group>";
+		};
+		E61E77A72B0B07F4003982E2 /* Cells */ = {
+			isa = PBXGroup;
+			children = (
+				E61E776E2B0203DB003982E2 /* SMTableViewCell.h */,
+				E61E776F2B0203DB003982E2 /* SMTableViewCell.m */,
+				E61E77A82B0B083D003982E2 /* CustomTableCellView.h */,
+				E61E77A92B0B083D003982E2 /* CustomTableCellView.m */,
+				E61E77AF2B0B4C75003982E2 /* SMVerticallyCenteredTextFieldCell.h */,
+				E61E77B02B0B4C75003982E2 /* SMVerticallyCenteredTextFieldCell.m */,
+				E61E77B22B0B50FB003982E2 /* SMVerticallyCenteredTextField.h */,
+				E61E77B32B0B50FB003982E2 /* SMVerticallyCenteredTextField.m */,
+			);
+			path = Cells;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E61E77272AFDC78A003982E2 /* MacOSApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E61E773B2AFDC78D003982E2 /* Build configuration list for PBXNativeTarget "MacOSApp" */;
+			buildPhases = (
+				635CFB8762EB80A212179C41 /* [CP] Check Pods Manifest.lock */,
+				E61E77242AFDC78A003982E2 /* Sources */,
+				E61E77252AFDC78A003982E2 /* Frameworks */,
+				E61E77262AFDC78A003982E2 /* Resources */,
+				1F1C4B321CE35CB8EC310CB3 /* [CP] Embed Pods Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MacOSApp;
+			productName = MacOSApp;
+			productReference = E61E77282AFDC78A003982E2 /* MacOSApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E61E77202AFDC78A003982E2 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					E61E77272AFDC78A003982E2 = {
+						CreatedOnToolsVersion = 15.0.1;
+						LastSwiftMigration = 1500;
+					};
+				};
+			};
+			buildConfigurationList = E61E77232AFDC78A003982E2 /* Build configuration list for PBXProject "MacOSApp" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = E61E771F2AFDC78A003982E2;
+			productRefGroup = E61E77292AFDC78A003982E2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E61E77272AFDC78A003982E2 /* MacOSApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E61E77262AFDC78A003982E2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E61E77322AFDC78D003982E2 /* Assets.xcassets in Resources */,
+				E61E77352AFDC78D003982E2 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		1F1C4B321CE35CB8EC310CB3 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-MacOSApp/Pods-MacOSApp-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-MacOSApp/Pods-MacOSApp-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MacOSApp/Pods-MacOSApp-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		635CFB8762EB80A212179C41 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-MacOSApp-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E61E77242AFDC78A003982E2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E61E77842B05F605003982E2 /* EmptyRefreshView.m in Sources */,
+				E61E77A62B0AF2C4003982E2 /* SMInput.m in Sources */,
+				E61E77302AFDC78A003982E2 /* ViewController.m in Sources */,
+				A1B2C3D4E5F60718293A4B5E /* SunmiUSBPrinterManager.m in Sources */,
+				A1B2C3D4E5F60718293A4B77 /* SMLabelPrintSettings.m in Sources */,
+				A1B2C3D4E5F60718293A4B78 /* SMLabelContent.m in Sources */,
+				A1B2C3D4E5F60718293A4B79 /* SMLabelCommandBuilder.m in Sources */,
+				A1B2C3D4E5F60718293A4B83 /* SMPrinterConnection.m in Sources */,
+				A1B2C3D4E5F60718293A4C04 /* SMReceiptPrintSettings.m in Sources */,
+				A1B2C3D4E5F60718293A4C05 /* SMReceiptContent.m in Sources */,
+				A1B2C3D4E5F60718293A4C08 /* SMReceiptCommandBuilder.m in Sources */,
+				A1B2C3D4E5F60718293A4D04 /* SMDesignerElement.m in Sources */,
+				A1B2C3D4E5F60718293A4D05 /* SMLabelDesignerCanvasView.m in Sources */,
+				A1B2C3D4E5F60718293A4D08 /* SMLabelRasterCommandBuilder.m in Sources */,
+				E61E777D2B04C125003982E2 /* PrinterWifiListController.m in Sources */,
+				E61E77372AFDC78D003982E2 /* main.m in Sources */,
+				E61E772D2AFDC78A003982E2 /* AppDelegate.m in Sources */,
+				E61E77A32B07566D003982E2 /* SMIndicator.m in Sources */,
+				E61E77702B0203DB003982E2 /* SMTableViewCell.m in Sources */,
+				E61E778F2B06174C003982E2 /* SYFlatButton.m in Sources */,
+				E61E77732B0466EA003982E2 /* DeviceListViewController.m in Sources */,
+				E61E777A2B04C112003982E2 /* PrinterSearchingController.m in Sources */,
+				E61E77972B07472F003982E2 /* SMAlert.m in Sources */,
+				E61E77B42B0B50FB003982E2 /* SMVerticallyCenteredTextField.m in Sources */,
+				E61E77B12B0B4C75003982E2 /* SMVerticallyCenteredTextFieldCell.m in Sources */,
+				E61E77AA2B0B083D003982E2 /* CustomTableCellView.m in Sources */,
+				E61E77772B04C0F8003982E2 /* PrinterSettingEntranceController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		E61E77332AFDC78D003982E2 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				E61E77342AFDC78D003982E2 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		E61E77392AFDC78D003982E2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		E61E773A2AFDC78D003982E2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		E61E773C2AFDC78D003982E2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 08C219270B5BF9A5B089786D /* Pods-MacOSApp.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = MacOSApp/MacOSApp.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				GCC_PREFIX_HEADER = "$(SRCROOT)/MacOSApp/SunmiPrinterPrefixHeader.pch";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MacOSApp/Info.plist;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "使用蓝牙";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "使用蓝牙";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sunmi.project.MacOSApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "MacOSApp/CustomButton/MacOSApp-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		E61E773D2AFDC78D003982E2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6159A83173F87C733428C1CA /* Pods-MacOSApp.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = MacOSApp/MacOSApp.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				GCC_PREFIX_HEADER = "$(SRCROOT)/MacOSApp/SunmiPrinterPrefixHeader.pch";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MacOSApp/Info.plist;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "使用蓝牙";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "使用蓝牙";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sunmi.project.MacOSApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "MacOSApp/CustomButton/MacOSApp-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E61E77232AFDC78A003982E2 /* Build configuration list for PBXProject "MacOSApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E61E77392AFDC78D003982E2 /* Debug */,
+				E61E773A2AFDC78D003982E2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E61E773B2AFDC78D003982E2 /* Build configuration list for PBXNativeTarget "MacOSApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E61E773C2AFDC78D003982E2 /* Debug */,
+				E61E773D2AFDC78D003982E2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E61E77202AFDC78A003982E2 /* Project object */;
+}

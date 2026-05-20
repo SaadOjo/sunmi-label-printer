@@ -1,0 +1,40 @@
+//
+//  SunmiPrinterPrefixHeader.pch
+//  MacOSApp
+//
+//  Created by SM2368 on 2023/11/15.
+//
+
+#ifndef SunmiPrinterPrefixHeader_pch
+#define SunmiPrinterPrefixHeader_pch
+
+#import <AVKit/AVKit.h>
+#import <Foundation/Foundation.h>
+#import <SunmiPrinterMacOS/SunmiPrinterMacOS.h>
+#import <Masonry/Masonry.h>
+
+#define enterNetworkModeCommand NO
+
+typedef NS_ENUM(NSUInteger, PrintConnectType) {
+    PrintConnectBluetooth = 0,
+    PrintConnectIP,
+    PrintConnectUSB,
+    PrintConnectWifi
+};
+
+#define kScreenWidth [[NSScreen mainScreen] visibleFrame].size.width
+#define kScreenHeight [[NSScreen mainScreen] visibleFrame].size.height
+
+
+#define SM_COLORHEX(hex, a)     [NSColor colorWithRed:((float)((hex & 0xFF0000) >> 16)) / 255.0 green:((float)((hex & 0xFF00) >> 8)) / 255.0 blue:((float)(hex & 0xFF)) / 255.0 alpha:1.0*a]
+#define COLOR_33                SM_COLORHEX(0x333338,1)
+#define COLOR_77                SM_COLORHEX(0x777E8C,1)
+#define COLOR_85                SM_COLORHEX(0x85858A,1)
+
+#import "SYFlatButton.h"
+#import "SMAlert.h"
+#import "SMInput.h"
+#import "SMIndicator.h"
+#import "EmptyRefreshView.h"
+
+#endif /* SunmiPrinterPrefixHeader_pch */

@@ -1,0 +1,6 @@
+framework module SunmiPrinterMacOS {
+  umbrella header "SunmiPrinterMacOS.h"
+  export *
+
+  module * { export * }
+}

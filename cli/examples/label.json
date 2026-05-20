@@ -1,0 +1,12 @@
+{
+  "widthMM": 50,
+  "heightMM": 20,
+  "gapMM": 3,
+  "speed": 3,
+  "density": 12,
+  "title": "OJO",
+  "subtitle": "Thermal Label Roll",
+  "price": "$8.99",
+  "barcode": "SKU001234",
+  "qr": "https://ojo.example/SKU001234"
+}
