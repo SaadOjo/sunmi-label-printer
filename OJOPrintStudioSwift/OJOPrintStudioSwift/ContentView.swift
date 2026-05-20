@@ -82,14 +82,8 @@ struct ContentView: View {
                         HStack(spacing: 12) {
                             Image(systemName: section.icon)
                                 .frame(width: 22)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(section.rawValue)
-                                    .font(.system(size: 14, weight: .semibold))
-                                Text(section.subtitle)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .lineLimit(1)
-                            }
+                            Text(section.rawValue)
+                                .font(.system(size: 14, weight: .semibold))
                             Spacer()
                         }
                         .padding(.vertical, 10)
@@ -126,9 +120,6 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(selectedSection.rawValue)
                 .font(.system(size: 28, weight: .bold, design: .rounded))
-            Text(selectedSection.subtitle)
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -140,10 +131,32 @@ struct SettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                card(title: "Output settings",
-                     subtitle: "These are printer/raster defaults, separate from the label canvas size.") {
-                    VStack(alignment: .leading, spacing: 14) {
-                        VStack(alignment: .leading, spacing: 6) {
+                card(title: "Label setup") {
+                    VStack(spacing: 10) {
+                        Picker("Preset", selection: $designerStore.selectedPreset) {
+                            ForEach(LabelPreset.allCases) { preset in
+                                Text(preset.rawValue).tag(preset)
+                            }
+                        }
+                        .onChange(of: designerStore.selectedPreset) { newValue in
+                            designerStore.applyPreset(newValue)
+                        }
+
+                        HStack(spacing: 10) {
+                            DeferredNumberField(title: "Width", value: Binding(get: { designerStore.widthMM }, set: { designerStore.widthMM = $0 }), suffix: "mm")
+                            DeferredNumberField(title: "Height", value: Binding(get: { designerStore.heightMM }, set: { designerStore.heightMM = $0 }), suffix: "mm")
+                        }
+
+                        HStack(spacing: 10) {
+                            DeferredNumberField(title: "Gap", value: Binding(get: { designerStore.gapMM }, set: { designerStore.gapMM = $0 }), suffix: "mm")
+                            Spacer()
+                        }
+                    }
+                }
+
+                card(title: "Output") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 5) {
                             Text("Density")
                                 .font(.caption.weight(.semibold))
                                 .foregroundColor(.secondary)
@@ -151,25 +164,14 @@ struct SettingsView: View {
                                 Text("\(designerStore.density)")
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                            Text("Thermal darkness for TSPL label output.")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
                         }
 
-                        Divider()
-
-                        Toggle("Use SUNMI bitmap polarity", isOn: $designerStore.invertBitmapBits)
+                        Toggle("SUNMI bitmap polarity", isOn: $designerStore.invertBitmapBits)
                             .toggleStyle(.checkbox)
-                            .help("On is the default/normal mode for this SUNMI label printer. Turn off only if a different printer renders black/white backwards.")
-
-                        Text("On is treated as normal for this printer. It sends the bit polarity the SUNMI label firmware expects for black pixels.")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
                     }
                 }
 
-                card(title: "Current TSPL summary",
-                     subtitle: "Generated from the current label setup and output settings.") {
+                card(title: "TSPL") {
                     Text(designerStore.summary)
                         .font(.system(size: 12, design: .monospaced))
                         .foregroundColor(.secondary)
@@ -183,16 +185,10 @@ struct SettingsView: View {
         .background(Color(nsColor: .controlBackgroundColor))
     }
 
-    private func card<Content: View>(title: String, subtitle: String, @ViewBuilder content: () -> Content) -> some View {
+    private func card<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.system(size: 15, weight: .semibold))
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            Text(title)
+                .font(.system(size: 15, weight: .semibold))
             content()
         }
         .padding(16)

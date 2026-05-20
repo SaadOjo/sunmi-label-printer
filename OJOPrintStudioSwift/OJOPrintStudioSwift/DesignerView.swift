@@ -8,83 +8,39 @@ struct DesignerView: View {
     @State private var printMessage: String = "Ready"
     @State private var isPreparingPrint: Bool = false
     @AppStorage("OJOPrintStudioSwift.Designer.showElementsPanel") private var showElementsPanel: Bool = true
+    @AppStorage("OJOPrintStudioSwift.Designer.showBitmapPanel") private var showBitmapPanel: Bool = false
 
     private let fonts = ["Helvetica Neue", "Arial", "Avenir Next", "Menlo", "Times New Roman"]
 
     var body: some View {
-        HStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    mediaCard
-                    inspectorCard
-                    printCard
-                }
-                .padding(20)
-            }
-            .frame(width: 342)
-            .background(Color(nsColor: .windowBackgroundColor))
-
-            Divider()
-
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .firstTextBaseline) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Canvas")
-                            .font(.title3.weight(.semibold))
-                        Text("\(Int(designerStore.widthDots)) × \(Int(designerStore.heightDots)) dots · \(designerStore.widthMM, specifier: "%.1f") × \(designerStore.heightMM, specifier: "%.1f") mm")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text("Click text once to select, click it again to edit, then click/drag inside the editor to place the cursor or select text.")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 22)
+        VStack(alignment: .leading, spacing: 12) {
+            canvasToolbar
+                .padding(.horizontal, 18)
                 .padding(.top, 18)
 
-                canvasToolbar
+            HStack(spacing: 12) {
+                LabelCanvasView(store: designerStore)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                if showElementsPanel {
+                    canvasElementsPanel
+                        .frame(width: 118)
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                }
+            }
+            .padding(.horizontal, 18)
+
+            if showBitmapPanel {
+                bitmapPanel
                     .padding(.horizontal, 18)
-
-                HStack(spacing: 12) {
-                    LabelCanvasView(store: designerStore)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                    if showElementsPanel {
-                        canvasElementsPanel
-                            .frame(width: 118)
-                            .transition(.move(edge: .trailing).combined(with: .opacity))
-                    }
-                }
-                .padding(.horizontal, 18)
-                .padding(.bottom, 18)
-            }
-            .background(Color(nsColor: .controlBackgroundColor))
-        }
-    }
-
-    private var mediaCard: some View {
-        card(title: "Label setup", subtitle: "Changing width or height immediately updates the canvas proportions.") {
-            VStack(spacing: 10) {
-                Picker("Preset", selection: $designerStore.selectedPreset) {
-                    ForEach(LabelPreset.allCases) { preset in
-                        Text(preset.rawValue).tag(preset)
-                    }
-                }
-                .onChange(of: designerStore.selectedPreset) { newValue in
-                    designerStore.applyPreset(newValue)
-                }
-
-                HStack(spacing: 10) {
-                    numberField("Width", value: Binding(get: { designerStore.widthMM }, set: { designerStore.widthMM = $0 }), suffix: "mm")
-                    numberField("Height", value: Binding(get: { designerStore.heightMM }, set: { designerStore.heightMM = $0 }), suffix: "mm")
-                }
-                HStack(spacing: 10) {
-                    numberField("Gap", value: Binding(get: { designerStore.gapMM }, set: { designerStore.gapMM = $0 }), suffix: "mm")
-                    Spacer()
-                }
+                    .padding(.bottom, 18)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else {
+                Spacer(minLength: 0)
+                    .frame(height: 6)
             }
         }
+        .background(Color(nsColor: .controlBackgroundColor))
     }
 
     private var canvasToolbar: some View {
@@ -118,7 +74,28 @@ struct DesignerView: View {
             }
             .disabled(designerStore.selectedElement == nil)
 
-            Spacer()
+            selectedElementControls
+
+            Spacer(minLength: 8)
+
+            Text("\(Int(designerStore.widthDots))×\(Int(designerStore.heightDots)) dots")
+                .font(.caption.monospacedDigit())
+                .foregroundColor(.secondary)
+
+            Button {
+                printLabel()
+            } label: {
+                Label(isPreparingPrint ? "Preparing" : "Print", systemImage: "printer")
+            }
+            .disabled(!printerStore.isConnected || isPreparingPrint)
+
+            Button {
+                withAnimation(.easeInOut(duration: 0.18)) {
+                    showBitmapPanel.toggle()
+                }
+            } label: {
+                Label("Bitmap", systemImage: "rectangle.3.group")
+            }
 
             Button {
                 withAnimation(.easeInOut(duration: 0.18)) {
@@ -127,7 +104,6 @@ struct DesignerView: View {
             } label: {
                 Label("Elements", systemImage: "list.bullet.rectangle")
             }
-            .help(showElementsPanel ? "Hide elements panel" : "Show elements panel")
 
             Toggle("Grid", isOn: $designerStore.showGrid)
                 .toggleStyle(.checkbox)
@@ -141,6 +117,46 @@ struct DesignerView: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(Color.black.opacity(0.08), lineWidth: 1)
         )
+    }
+
+    @ViewBuilder
+    private var selectedElementControls: some View {
+        if let selected = designerStore.selectedElement {
+            Divider()
+                .frame(height: 22)
+
+            if selected.kind == .text {
+                Picker("Font", selection: Binding(get: { designerStore.selectedFontName }, set: { designerStore.selectedFontName = $0 })) {
+                    ForEach(fonts, id: \.self) { font in
+                        Text(font).tag(font)
+                    }
+                }
+                .labelsHidden()
+                .frame(width: 126)
+
+                CompactNumberField("Size", value: Binding(get: { designerStore.selectedFontSize }, set: { designerStore.selectedFontSize = $0 }), width: 42)
+
+                Button {
+                    designerStore.selectedIsBold = !designerStore.selectedIsBold
+                } label: {
+                    Text("B")
+                        .fontWeight(.bold)
+                        .frame(width: 16)
+                }
+
+                Picker("Align", selection: Binding(get: { designerStore.selectedAlignment }, set: { designerStore.selectedAlignment = $0 })) {
+                    ForEach(DesignerTextAlignment.allCases) { alignment in
+                        Text(alignment.rawValue.prefix(1)).tag(alignment)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .frame(width: 92)
+            }
+
+            CompactNumberField("W", value: Binding(get: { designerStore.selectedW }, set: { designerStore.selectedW = $0 }), width: 42)
+            CompactNumberField("H", value: Binding(get: { designerStore.selectedH }, set: { designerStore.selectedH = $0 }), width: 42)
+        }
     }
 
     private var canvasElementsPanel: some View {
@@ -158,7 +174,6 @@ struct DesignerView: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundColor(.secondary)
-                .help("Hide elements panel")
             }
 
             if designerStore.elements.isEmpty {
@@ -212,130 +227,77 @@ struct DesignerView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help("Select \(elementID(for: element, index: index))")
     }
 
-    private var inspectorCard: some View {
-        card(title: "Inspector", subtitle: "Positions and sizes are in printer dots.") {
-            if let selected = designerStore.selectedElement {
-                VStack(alignment: .leading, spacing: 11) {
-                    Text(selected.kind == .text ? "Text element" : "Image element")
-                        .font(.caption.weight(.semibold))
-                        .foregroundColor(.secondary)
-
-                    if selected.kind == .text {
-                        TextField("Text", text: Binding(get: { designerStore.selectedText }, set: { designerStore.selectedText = $0 }))
-                            .textFieldStyle(.roundedBorder)
-
-                        Picker("Font", selection: Binding(get: { designerStore.selectedFontName }, set: { designerStore.selectedFontName = $0 })) {
-                            ForEach(fonts, id: \.self) { font in
-                                Text(font).tag(font)
-                            }
-                        }
-
-                        HStack(spacing: 10) {
-                            numberField("Font size", value: Binding(get: { designerStore.selectedFontSize }, set: { designerStore.selectedFontSize = $0 }), suffix: "dot")
-                            Toggle("Bold", isOn: Binding(get: { designerStore.selectedIsBold }, set: { designerStore.selectedIsBold = $0 }))
-                                .toggleStyle(.checkbox)
-                                .frame(width: 80)
-                        }
-
-                        Picker("Align", selection: Binding(get: { designerStore.selectedAlignment }, set: { designerStore.selectedAlignment = $0 })) {
-                            ForEach(DesignerTextAlignment.allCases) { alignment in
-                                Text(alignment.rawValue).tag(alignment)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                    } else {
-                        Text(selected.imageName ?? "Imported image")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                    }
-
-                    HStack(spacing: 10) {
-                        numberField("X", value: Binding(get: { designerStore.selectedX }, set: { designerStore.selectedX = $0 }), suffix: "")
-                        numberField("Y", value: Binding(get: { designerStore.selectedY }, set: { designerStore.selectedY = $0 }), suffix: "")
-                    }
-                    HStack(spacing: 10) {
-                        numberField("W", value: Binding(get: { designerStore.selectedW }, set: { designerStore.selectedW = $0 }), suffix: "")
-                        numberField("H", value: Binding(get: { designerStore.selectedH }, set: { designerStore.selectedH = $0 }), suffix: "")
-                    }
-                }
-            } else {
-                Text("Select an element on the canvas.")
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
-    }
-
-    private var printCard: some View {
-        card(title: "Print", subtitle: "Preview and send the current design to the connected printer.") {
-            VStack(alignment: .leading, spacing: 10) {
-                bitmapPreview
-
-                Button {
-                    printLabel()
-                } label: {
-                    Label(isPreparingPrint ? "Preparing…" : "Print Label", systemImage: "printer")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(!printerStore.isConnected || isPreparingPrint)
-
+    private var bitmapPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Bitmap preview")
+                    .font(.caption.weight(.semibold))
+                Spacer()
                 Text(printMessage)
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundColor(.secondary)
-                    .lineLimit(3)
+                    .lineLimit(1)
+                Button {
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        showBitmapPanel = false
+                    }
+                } label: {
+                    Image(systemName: "xmark")
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(.secondary)
             }
+
+            bitmapPreview
         }
+        .padding(10)
+        .frame(maxWidth: .infinity, minHeight: 132, maxHeight: 176)
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.black.opacity(0.08), lineWidth: 1)
+        )
     }
 
     private var bitmapPreview: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("1-bit bitmap preview")
-                .font(.caption.weight(.semibold))
-                .foregroundColor(.secondary)
-            ZStack {
-                if let image = designerStore.bitmapPreviewImage {
-                    Image(nsImage: image)
-                        .interpolation(.none)
-                        .resizable()
-                        .scaledToFit()
-                        .blur(radius: designerStore.isRenderingBitmapPreview ? 4 : 0)
-                        .opacity(designerStore.isRenderingBitmapPreview ? 0.28 : 1)
-                } else {
-                    Text("Preparing preview…")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                if designerStore.isRenderingBitmapPreview {
-                    Color.white.opacity(0.76)
-                    VStack(spacing: 8) {
-                        ProgressView()
-                            .controlSize(.small)
-                        Text("Buffering bitmap preview…")
-                            .font(.caption.weight(.semibold))
-                        Text("Preview refreshes after editing pauses.")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(10)
-                    .background(.regularMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                }
+        ZStack {
+            if let image = designerStore.bitmapPreviewImage {
+                Image(nsImage: image)
+                    .interpolation(.none)
+                    .resizable()
+                    .scaledToFit()
+                    .blur(radius: designerStore.isRenderingBitmapPreview ? 4 : 0)
+                    .opacity(designerStore.isRenderingBitmapPreview ? 0.28 : 1)
+            } else {
+                Text("Preparing preview…")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
-            .frame(maxWidth: .infinity, minHeight: 82, maxHeight: 150)
-            .padding(8)
-            .background(Color.white)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .stroke(Color.black.opacity(0.14), lineWidth: 1)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+            if designerStore.isRenderingBitmapPreview {
+                Color.white.opacity(0.76)
+                VStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("Buffering bitmap preview…")
+                        .font(.caption.weight(.semibold))
+                }
+                .padding(10)
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
         }
+        .frame(maxWidth: .infinity, minHeight: 88, maxHeight: 126)
+        .padding(8)
+        .background(Color.white)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(Color.black.opacity(0.14), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private func elementID(for element: DesignerElement, index: Int) -> String {
@@ -377,31 +339,74 @@ struct DesignerView: View {
             }
         }
     }
+}
 
-    private func numberField(_ title: String, value: Binding<Double>, suffix: String) -> some View {
-        DeferredNumberField(title: title, value: value, suffix: suffix)
+struct CompactNumberField: View {
+    let title: String
+    @Binding var value: Double
+    let width: CGFloat
+
+    @State private var text: String = ""
+    @FocusState private var isFocused: Bool
+
+    init(_ title: String, value: Binding<Double>, width: CGFloat = 52) {
+        self.title = title
+        self._value = value
+        self.width = width
     }
 
-    private func card<Content: View>(title: String, subtitle: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.system(size: 15, weight: .semibold))
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            content()
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(title)
+                .font(.caption2.weight(.semibold))
+                .foregroundColor(.secondary)
+            TextField(title, text: $text)
+                .textFieldStyle(.roundedBorder)
+                .focused($isFocused)
+                .frame(width: width)
+                .onSubmit {
+                    commit()
+                    isFocused = false
+                }
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .onAppear { text = formatted(value) }
+        .onChange(of: value) { newValue in
+            if !isFocused { text = formatted(newValue) }
+        }
+        .onChange(of: isFocused) { focused in
+            if focused {
+                text = formatted(value)
+            } else {
+                commit()
+            }
+        }
+        .onDisappear { commit() }
+    }
+
+    private func commit() {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            text = formatted(value)
+            return
+        }
+        let normalized = trimmed.replacingOccurrences(of: ",", with: ".")
+        guard let parsed = Double(normalized), parsed.isFinite else {
+            text = formatted(value)
+            return
+        }
+        value = parsed
+        text = formatted(value)
+    }
+
+    private func formatted(_ value: Double) -> String {
+        if abs(value - value.rounded()) < 0.001 {
+            return String(format: "%.0f", value)
+        }
+        return String(format: "%.1f", value)
     }
 }
 
-private struct DeferredNumberField: View {
+struct DeferredNumberField: View {
     let title: String
     @Binding var value: Double
     let suffix: String

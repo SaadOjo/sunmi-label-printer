@@ -160,8 +160,9 @@ final class LabelDesignerStore: ObservableObject {
 
     private var isNormalizingMedia = false
     private var isApplyingPreset = false
-    private static let persistenceKey = "OJOPrintStudioSwift.LabelDesignerState.v3"
+    private static let persistenceKey = "OJOPrintStudioSwift.LabelDesignerState.v4"
     private static let legacyPersistenceKeys = [
+        "OJOPrintStudioSwift.LabelDesignerState.v3",
         "OJOPrintStudioSwift.LabelDesignerState.v2",
         "OJOPrintStudioSwift.LabelDesignerState.v1"
     ]
