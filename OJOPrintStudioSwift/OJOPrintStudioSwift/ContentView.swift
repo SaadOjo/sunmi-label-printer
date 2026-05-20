@@ -3,12 +3,14 @@ import SwiftUI
 enum OJOSection: String, CaseIterable, Identifiable {
     case connect = "Connect"
     case designer = "Designer"
+    case settings = "Settings"
 
     var id: String { rawValue }
     var icon: String {
         switch self {
         case .connect: return "wifi"
         case .designer: return "rectangle.and.pencil.and.ellipsis"
+        case .settings: return "gearshape"
         }
     }
 
@@ -18,6 +20,8 @@ enum OJOSection: String, CaseIterable, Identifiable {
             return "Connect to a SUNMI printer using the SDK"
         case .designer:
             return "Design and print dot-accurate labels"
+        case .settings:
+            return "Printer output defaults and advanced options"
         }
     }
 }
@@ -48,6 +52,8 @@ struct ContentView: View {
                         ConnectView()
                     case .designer:
                         DesignerView()
+                    case .settings:
+                        SettingsView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -125,5 +131,73 @@ struct ContentView: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct SettingsView: View {
+    @EnvironmentObject private var designerStore: LabelDesignerStore
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                card(title: "Output settings",
+                     subtitle: "These are printer/raster defaults, separate from the label canvas size.") {
+                    VStack(alignment: .leading, spacing: 14) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Density")
+                                .font(.caption.weight(.semibold))
+                                .foregroundColor(.secondary)
+                            Stepper(value: $designerStore.density, in: 0...15) {
+                                Text("\(designerStore.density)")
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            Text("Thermal darkness for TSPL label output.")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Divider()
+
+                        Toggle("Use SUNMI bitmap polarity", isOn: $designerStore.invertBitmapBits)
+                            .toggleStyle(.checkbox)
+                            .help("On is the default/normal mode for this SUNMI label printer. Turn off only if a different printer renders black/white backwards.")
+
+                        Text("On is treated as normal for this printer. It sends the bit polarity the SUNMI label firmware expects for black pixels.")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                card(title: "Current TSPL summary",
+                     subtitle: "Generated from the current label setup and output settings.") {
+                    Text(designerStore.summary)
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundColor(.secondary)
+                        .textSelection(.enabled)
+                }
+            }
+            .padding(24)
+            .frame(maxWidth: 560, alignment: .leading)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color(nsColor: .controlBackgroundColor))
+    }
+
+    private func card<Content: View>(title: String, subtitle: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold))
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            content()
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(nsColor: .windowBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }

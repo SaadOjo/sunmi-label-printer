@@ -7,6 +7,7 @@ struct DesignerView: View {
     @EnvironmentObject private var designerStore: LabelDesignerStore
     @State private var printMessage: String = "Ready"
     @State private var isPreparingPrint: Bool = false
+    @AppStorage("OJOPrintStudioSwift.Designer.showElementsPanel") private var showElementsPanel: Bool = true
 
     private let fonts = ["Helvetica Neue", "Arial", "Avenir Next", "Menlo", "Times New Roman"]
 
@@ -15,8 +16,6 @@ struct DesignerView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     mediaCard
-                    outputSettingsCard
-                    elementsCard
                     inspectorCard
                     printCard
                 }
@@ -47,9 +46,18 @@ struct DesignerView: View {
                 canvasToolbar
                     .padding(.horizontal, 18)
 
-                LabelCanvasView(store: designerStore)
-                    .padding(.horizontal, 18)
-                    .padding(.bottom, 18)
+                HStack(spacing: 12) {
+                    LabelCanvasView(store: designerStore)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                    if showElementsPanel {
+                        canvasElementsPanel
+                            .frame(width: 118)
+                            .transition(.move(edge: .trailing).combined(with: .opacity))
+                    }
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 18)
             }
             .background(Color(nsColor: .controlBackgroundColor))
         }
@@ -75,36 +83,6 @@ struct DesignerView: View {
                     numberField("Gap", value: Binding(get: { designerStore.gapMM }, set: { designerStore.gapMM = $0 }), suffix: "mm")
                     Spacer()
                 }
-            }
-        }
-    }
-
-    private var outputSettingsCard: some View {
-        card(title: "Output settings", subtitle: "Printer/raster options. Bitmap inversion is enabled by default for this SUNMI label workflow.") {
-            VStack(alignment: .leading, spacing: 11) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Density")
-                        .font(.caption.weight(.semibold))
-                        .foregroundColor(.secondary)
-                    Stepper(value: $designerStore.density, in: 0...15) {
-                        Text("\(designerStore.density)")
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-
-                Toggle("Invert bitmap bits", isOn: $designerStore.invertBitmapBits)
-                    .toggleStyle(.checkbox)
-                    .help("Default is on. Use this when the printer expects 0 bits for burned/black pixels.")
-
-                Text("Preview shows the 1-bit pixels intended to burn. Inversion only changes the byte polarity sent to the printer.")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-
-                Text(designerStore.summary)
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundColor(.secondary)
-                    .lineLimit(8)
-                    .textSelection(.enabled)
             }
         }
     }
@@ -142,6 +120,15 @@ struct DesignerView: View {
 
             Spacer()
 
+            Button {
+                withAnimation(.easeInOut(duration: 0.18)) {
+                    showElementsPanel.toggle()
+                }
+            } label: {
+                Label("Elements", systemImage: "list.bullet.rectangle")
+            }
+            .help(showElementsPanel ? "Hide elements panel" : "Show elements panel")
+
             Toggle("Grid", isOn: $designerStore.showGrid)
                 .toggleStyle(.checkbox)
         }
@@ -156,44 +143,76 @@ struct DesignerView: View {
         )
     }
 
-    private var elementsCard: some View {
-        card(title: "Elements", subtitle: "Use this if elements overlap or are hard to click on the canvas.") {
-            VStack(alignment: .leading, spacing: 6) {
-                if designerStore.elements.isEmpty {
-                    Text("No elements yet.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                } else {
-                    ForEach(Array(designerStore.elements.enumerated()).reversed(), id: \.element.id) { index, element in
-                        Button {
-                            designerStore.select(element.id)
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: element.kind == .text ? "textformat" : "photo")
-                                    .foregroundColor(.secondary)
-                                    .frame(width: 16)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(elementTitle(for: element, index: index))
-                                        .font(.caption.weight(.semibold))
-                                        .lineLimit(1)
-                                    Text("x \(Int(element.frameDots.minX)), y \(Int(element.frameDots.minY)) · \(Int(element.frameDots.width))×\(Int(element.frameDots.height))")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                }
-                                Spacer()
-                            }
-                            .padding(.vertical, 7)
-                            .padding(.horizontal, 9)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(designerStore.selectedElementID == element.id ? Color.accentColor.opacity(0.15) : Color.clear)
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                            .contentShape(Rectangle())
+    private var canvasElementsPanel: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                Text("Elements")
+                    .font(.caption.weight(.semibold))
+                Spacer()
+                Button {
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        showElementsPanel = false
+                    }
+                } label: {
+                    Image(systemName: "xmark")
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(.secondary)
+                .help("Hide elements panel")
+            }
+
+            if designerStore.elements.isEmpty {
+                Text("None")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                ScrollView {
+                    VStack(spacing: 6) {
+                        ForEach(Array(designerStore.elements.enumerated()).reversed(), id: \.element.id) { index, element in
+                            elementPanelRow(element: element, index: index)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
+
+            Spacer(minLength: 0)
         }
+        .padding(10)
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.black.opacity(0.08), lineWidth: 1)
+        )
+    }
+
+    private func elementPanelRow(element: DesignerElement, index: Int) -> some View {
+        let selected = designerStore.selectedElementID == element.id
+        return Button {
+            designerStore.select(element.id)
+        } label: {
+            HStack(spacing: 7) {
+                Circle()
+                    .fill(selected ? Color.accentColor : Color.clear)
+                    .frame(width: 6, height: 6)
+                Image(systemName: element.kind == .text ? "textformat" : "photo")
+                    .foregroundColor(.secondary)
+                    .frame(width: 14)
+                Text(elementID(for: element, index: index))
+                    .font(.system(size: 12, weight: selected ? .semibold : .regular, design: .monospaced))
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 7)
+            .padding(.horizontal, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(selected ? Color.accentColor.opacity(0.16) : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help("Select \(elementID(for: element, index: index))")
     }
 
     private var inspectorCard: some View {
@@ -319,14 +338,9 @@ struct DesignerView: View {
         }
     }
 
-    private func elementTitle(for element: DesignerElement, index: Int) -> String {
-        switch element.kind {
-        case .text:
-            let text = element.text.trimmingCharacters(in: .whitespacesAndNewlines)
-            return text.isEmpty ? "Text \(index + 1)" : text
-        case .image:
-            return element.imageName ?? "Image \(index + 1)"
-        }
+    private func elementID(for element: DesignerElement, index: Int) -> String {
+        let prefix = element.kind == .text ? "T" : "I"
+        return "\(prefix)-\(String(format: "%03d", index + 1))"
     }
 
     private func addImage() {

@@ -59,7 +59,7 @@ struct TSPLRasterBuilder {
         Bitmap \(rowBytes) bytes/row × \(heightDots) rows
         Payload \(rowBytes * heightDots) bitmap bytes
         Density \(density), Elements \(elements.count)
-        Polarity \(invertBitmapBits ? "inverted bits" : "normal bits")
+        Polarity \(invertBitmapBits ? "SUNMI bitmap polarity" : "standard 1=black polarity")
         """
     }
 
